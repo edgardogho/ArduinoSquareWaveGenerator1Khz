@@ -1154,6 +1154,9 @@ void serialEvent() {
   // Loop while there are characters to be read on the serial buffer
   while (Serial.available()) {
     char inChar = (char)Serial.read();
+    //Ignore chars not expected
+    if (inChar!=0x0A && inChar != 0x0D && (!(inChar>='0' && (inChar<='9'))) && (! (inChar=='F' || inChar=='W' || inChar=='S')))
+    continue;
     inputBuffer += inChar;
     // Keep the number of element in the buffer accounted for
     bufferCounter++;
@@ -1184,7 +1187,7 @@ void loop() {
     bufferCounter=0; // Reset buffer counter
 
     //Check for commands
-    if (inputBuffer.charAt(0)=='F' && inputBuffer.length() == 18){
+    if (inputBuffer.charAt(0)=='F' && inputBuffer.length() >= 18){
       channel1Fast = inputBuffer.substring(1,5).toInt();
       channel1Slow = inputBuffer.substring(6,9).toInt();
       channel2Fast = inputBuffer.substring(10,13).toInt();
@@ -1232,11 +1235,15 @@ void loop() {
   else
     channel1Freq = channel1Slow;
 
-  if (channel1Freq>1023 || channel1Freq<0){
+  if (channel1Freq>1023){
     channel1Freq = 1023;
   }
+
+  if (channel1Freq<17){
+    channel1Freq = 17;
+  }
   // Pickup from the lut the timer value for the selected frequency
-  channel1Counter = pgm_read_word_near(LUT + channel1Freq);
+  channel1Counter = pgm_read_word_near(LUT + channel1Freq-1);
 
 
   //Channel 2 is pretty much the same as channel 1
@@ -1245,9 +1252,9 @@ void loop() {
   else
     channel2Freq = channel2Slow;
 
-  if (channel2Freq>1023 || channel2Freq < 0){
-    channel2Freq = 1023;
+  if (channel2Freq<17){
+    channel2Freq = 17;
   }
   // Pickup from the lut the timer value for the selected frequency
-  channel2Counter = pgm_read_word_near(LUT + channel2Freq);
+  channel2Counter = pgm_read_word_near(LUT + channel2Freq-1);
 }
